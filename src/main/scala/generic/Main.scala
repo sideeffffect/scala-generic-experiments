@@ -3,8 +3,6 @@ package generic
 import cats.Eq
 import cats.implicits._
 
-import scala.reflect.ClassTag
-
 sealed trait Tree[A] extends Product with Serializable
 
 object Tree {
@@ -21,17 +19,13 @@ object Tree {
     def apply[A](l: Tree[A], r: Tree[A]): Tree[A] = new Branch(l, r)
   }
 
-  implicit def generic[A]: Generic[Tree[A]] {
-    type Rep = Either[
-      Generic.Con[Generic.Wrap[A]],
-      Generic.Con[(Generic.Wrap[Tree[A]], Generic.Wrap[Tree[A]])]
-    ]
-  } =
+  type GenericRep[A] = Either[
+    Generic.Con[Generic.Wrap[A]],
+    Generic.Con[(Generic.Wrap[Tree[A]], Generic.Wrap[Tree[A]])]
+  ]
+  implicit def generic[A]: Generic[Tree[A]] { type Rep = GenericRep[A] } =
     new Generic[Tree[A]] {
-      override type Rep = Either[
-        Generic.Con[Generic.Wrap[A]],
-        Generic.Con[(Generic.Wrap[Tree[A]], Generic.Wrap[Tree[A]])]
-      ]
+      override type Rep = GenericRep[A]
 
       override def from(a: Tree[A]): Rep =
         a match {
@@ -123,27 +117,26 @@ object Color {
 
   final case object Blue extends Color
 
-  implicit val generic: Generic[Color] {
-    type Rep =
-      Either[Generic.Con[Unit], Either[Generic.Con[Unit], Generic.Con[Unit]]]
-  } = new Generic[Color] {
-    override type Rep =
-      Either[Generic.Con[Unit], Either[Generic.Con[Unit], Generic.Con[Unit]]]
+  type GenericRep =
+    Either[Generic.Con[Unit], Either[Generic.Con[Unit], Generic.Con[Unit]]]
+  implicit val generic: Generic[Color] { type Rep = GenericRep } =
+    new Generic[Color] {
+      override type Rep = GenericRep
 
-    override def from(a: Color): Rep =
-      a match {
-        case Red   => Left(Generic.Con("Red", ()))
-        case Green => Right(Left(Generic.Con("Green", ())))
-        case Blue  => Right(Right(Generic.Con("Blue", ())))
-      }
+      override def from(a: Color): Rep =
+        a match {
+          case Red   => Left(Generic.Con("Red", ()))
+          case Green => Right(Left(Generic.Con("Green", ())))
+          case Blue  => Right(Right(Generic.Con("Blue", ())))
+        }
 
-    override def to(rep: Rep): Color =
-      rep match {
-        case Left(Generic.Con(_, ()))         => Red
-        case Right(Left(Generic.Con(_, ())))  => Green
-        case Right(Right(Generic.Con(_, ()))) => Blue
-      }
-  }
+      override def to(rep: Rep): Color =
+        rep match {
+          case Left(Generic.Con(_, ()))         => Red
+          case Right(Left(Generic.Con(_, ())))  => Green
+          case Right(Right(Generic.Con(_, ()))) => Blue
+        }
+    }
 
   def enum: List[Color] = GEnum.`enum`
   // (generic, GEnum.either(GEnum.unit, GEnum.either(GEnum.unit,GEnum.unit)))
