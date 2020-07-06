@@ -20,10 +20,11 @@ object Tree {
   }
 
   type GenericRep[A] = Representation.Sum[
-    Representation.Con[Representation.Atom[A]],
-    Representation.Con[Representation.Product[Representation.Atom[Tree[A]], Representation.Atom[Tree[A]]]]
+    Representation.Product[A, Representation.Product.Unit.type],
+    Representation.Sum[Representation.Product[Tree[A], Representation.Product[Tree[
+      A
+    ], Representation.Product.Unit.type]], Representation.Sum.Void.type]
   ]
-
   implicit def generic[A]: Generic[Tree[A]] { type Rep = GenericRep[A] } =
     new Generic[Tree[A]] {
       override type Rep = GenericRep[A]
@@ -31,22 +32,34 @@ object Tree {
       override def from(a: Tree[A]): Rep =
         a match {
           case Leaf(x) =>
-            Representation.Sum.Left(Representation.Con("Leaf", Representation.Atom(x)))
+            Representation.Sum.Case.Constructor(
+              "Leaf",
+              Representation.Product.Factor("x", x, Representation.Product.Unit)
+            )
           case Branch(l, r) =>
-            Representation.Sum.Right(
-              Representation.Con(
+            Representation.Sum.Case.Next(
+              Representation.Sum.Case.Constructor(
                 "Branch",
-                Representation.Product(Representation.Atom(l), Representation.Atom(r))
+                Representation.Product
+                  .Factor("l", l, Representation.Product.Factor("r", r, Representation.Product.Unit))
               )
             )
         }
 
       override def to(rep: Rep): Tree[A] =
         rep match {
-          case Representation.Sum.Left(Representation.Con(_, Representation.Atom(value))) =>
+          case Representation.Sum.Case
+                .Constructor(_, Representation.Product.Factor(_, value, Representation.Product.Unit)) =>
             Leaf(value)
-          case Representation.Sum.Right(
-                Representation.Con(_, Representation.Product(Representation.Atom(l), Representation.Atom(r)))
+          case Representation.Sum.Case.Next(
+                Representation.Sum.Case.Constructor(
+                  _,
+                  Representation.Product.Factor(
+                    _,
+                    l,
+                    Representation.Product.Factor(_, r, Representation.Product.Unit)
+                  )
+                )
               ) =>
             Branch(l, r)
         }
@@ -56,8 +69,8 @@ object Tree {
     GEq.eq[Tree[A], Tree.GenericRep[A]](x, y)(
       generic,
       GEq.sum(
-        GEq.con(GEq.atom(eqA)),
-        GEq.con(GEq.product(GEq.atom(eq(eqA)), GEq.atom(eq(eqA))))
+        GEq.product(eqA, GEq.unit),
+        GEq.sum(GEq.product(eq(eqA), GEq.product(eq(eqA), GEq.unit)), GEq.void)
       )
     )
   }
@@ -65,7 +78,7 @@ object Tree {
   def conName[A](x: Tree[A]): String =
     GConName.conName[Tree[A], Tree.GenericRep[A]](x)(
       generic,
-      GConName.sum(GConName.con, GConName.con)
+      GConName.sum(GConName.sum(GConName.void))
     )
 }
 
@@ -80,9 +93,10 @@ object Color {
   final case object Blue extends Color
 
   type GenericRep =
-    Representation.Sum[Representation.Con[Representation.Unit.type], Representation.Sum[Representation.Con[
-      Representation.Unit.type
-    ], Representation.Con[Representation.Unit.type]]]
+    Representation.Sum[Representation.Product.Unit.type, Representation.Sum[
+      Representation.Product.Unit.type,
+      Representation.Sum[Representation.Product.Unit.type, Representation.Sum.Void.type]
+    ]]
   implicit val generic: Generic[Color] { type Rep = GenericRep } =
     new Generic[Color] {
       override type Rep = GenericRep
@@ -90,27 +104,30 @@ object Color {
       override def from(a: Color): Rep =
         a match {
           case Red =>
-            Representation.Sum.Left(Representation.Con("Red", Representation.Unit))
+            Representation.Sum.Case.Constructor("Red", Representation.Product.Unit)
           case Green =>
-            Representation.Sum.Right(
-              Representation.Sum.Left(Representation.Con("Green", Representation.Unit))
+            Representation.Sum.Case.Next(
+              Representation.Sum.Case.Constructor("Green", Representation.Product.Unit)
             )
           case Blue =>
-            Representation.Sum.Right(
-              Representation.Sum.Right(Representation.Con("Blue", Representation.Unit))
+            Representation.Sum.Case.Next(
+              Representation.Sum.Case.Next(
+                Representation.Sum.Case.Constructor("Blue", Representation.Product.Unit)
+              )
             )
         }
 
       override def to(rep: Rep): Color =
         rep match {
-          case Representation.Sum.Left(Representation.Con(_, Representation.Unit)) =>
+          case Representation.Sum.Case.Constructor(_, Representation.Product.Unit) =>
             Red
-          case Representation.Sum.Right(
-                Representation.Sum.Left(Representation.Con(_, Representation.Unit))
+          case Representation.Sum.Case.Next(
+                Representation.Sum.Case.Constructor(_, Representation.Product.Unit)
               ) =>
             Green
-          case Representation.Sum.Right(
-                Representation.Sum.Right(Representation.Con(_, Representation.Unit))
+          case Representation.Sum.Case.Next(
+                Representation.Sum.Case
+                  .Next(Representation.Sum.Case.Constructor(_, Representation.Product.Unit))
               ) =>
             Blue
         }
@@ -119,22 +136,19 @@ object Color {
   implicit val eq: Eq[Color] = (x: Color, y: Color) =>
     GEq.eq[Color, Color.GenericRep](x, y)(
       generic,
-      GEq.sum(GEq.con(GEq.unit), GEq.sum(GEq.con(GEq.unit), GEq.con(GEq.unit)))
+      GEq.sum(GEq.unit, GEq.sum(GEq.unit, GEq.sum(GEq.unit, GEq.void)))
     )
 
   def enum: List[Color] =
     GEnum.`enum`[Color, Color.GenericRep](
       generic,
-      GEnum.sum(
-        GEnum.con(GEnum.unit),
-        GEnum.sum(GEnum.con(GEnum.unit), GEnum.con(GEnum.unit))
-      )
+      GEnum.sum(GEnum.sum(GEnum.sum(GEnum.void)))
     )
 
   def conName(x: Color): String =
     GConName.conName[Color, Color.GenericRep](x)(
       generic,
-      GConName.sum(GConName.con, GConName.sum(GConName.con, GConName.con))
+      GConName.sum(GConName.sum(GConName.sum(GConName.void)))
     )
 }
 
