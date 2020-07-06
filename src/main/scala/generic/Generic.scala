@@ -96,7 +96,7 @@ object GEq {
 
   }
 
-  implicit def sum[P <: Representation.Product[_, _], S <: Representation.Sum[_, S]](implicit
+  implicit def sumCase[P <: Representation.Product[_, _], S <: Representation.Sum[_, S]](implicit
       geqA: GEq[P],
       geqB: GEq[S]
   ): GEq[Representation.Sum[P, S]] =
@@ -109,10 +109,10 @@ object GEq {
         case _ => false
       }
 
-  implicit val void: GEq[Representation.Sum.Void.type] =
+  implicit val sumVoid: GEq[Representation.Sum.Void.type] =
     (x: Representation.Sum.Void.type, y: Representation.Sum.Void.type) => true
 
-  implicit def product[A, P <: Representation.Product[_, P]](implicit
+  implicit def productFactor[A, P <: Representation.Product[_, P]](implicit
       eqA: Eq[A],
       geqB: GEq[P]
   ): GEq[Representation.Product[A, P]] =
@@ -122,7 +122,7 @@ object GEq {
           eqA.eqv(x1, y1) && geqB.geq(x2, y2)
         case _ => false
       }
-  implicit val unit: GEq[Representation.Product.Unit.type] =
+  implicit val productUnit: GEq[Representation.Product.Unit.type] =
     (x: Representation.Product.Unit.type, y: Representation.Product.Unit.type) => true
 }
 
@@ -137,7 +137,7 @@ object GEnum {
   ): List[A] =
     genum.genum.map(generic.to)
 
-  implicit def sum[S <: Representation.Sum[Representation.Product.Unit.type, _]](implicit
+  implicit def sumCase[S <: Representation.Sum[Representation.Product.Unit.type, _]](implicit
       genumS: GEnum[S]
   ): GEnum[Representation.Sum[Representation.Product.Unit.type, S]] =
     new GEnum[Representation.Sum[Representation.Product.Unit.type, S]] {
@@ -146,7 +146,7 @@ object GEnum {
           genumS.genum.map(Representation.Sum.Case.Next(_))
     }
 
-  implicit val void: GEnum[Representation.Sum.Void.type] = new GEnum[Representation.Sum.Void.type] {
+  implicit val sumVoid: GEnum[Representation.Sum.Void.type] = new GEnum[Representation.Sum.Void.type] {
     override def genum: List[Representation.Sum.Void.type] = List()
   }
 
@@ -162,14 +162,15 @@ object GConName {
   )(implicit generic: Generic[A] { type Rep = R }, gconName: GConName[R]): String =
     gconName.gconName(generic.from(x))
 
-  implicit def sum[P <: Representation.Product[_, _], S <: Representation.Sum[_, _]](implicit
+  implicit def sumCase[P <: Representation.Product[_, _], S <: Representation.Sum[_, _]](implicit
       gconnameS: GConName[S]
   ): GConName[Representation.Sum[P, S]] = {
     case Representation.Sum.Case.Constructor(constructorName, _) => constructorName
     case Representation.Sum.Case.Next(sum)                       => gconnameS.gconName(sum)
+    case Representation.Sum.Void                                 => ???
   }
 
-  implicit val void: GConName[Representation.Sum.Void.type] =
+  implicit val sumVoid: GConName[Representation.Sum.Void.type] =
     (x: Representation.Sum.Void.type) => "<undefined>"
 
 }

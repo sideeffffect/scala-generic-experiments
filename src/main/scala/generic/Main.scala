@@ -62,15 +62,27 @@ object Tree {
                 )
               ) =>
             Branch(l, r)
+          case Representation.Sum.Void                                                             => ???
+          case Representation.Sum.Case.Next(Representation.Sum.Void)                               => ???
+          case Representation.Sum.Case.Next(Representation.Sum.Case.Next(Representation.Sum.Void)) => ???
+          case Representation.Sum.Case.Constructor(_, Representation.Product.Unit)                 => ???
+          case Representation.Sum.Case
+                .Next(Representation.Sum.Case.Constructor(_, Representation.Product.Unit)) =>
+            ???
+          case Representation.Sum.Case.Next(
+                Representation.Sum.Case
+                  .Constructor(_, Representation.Product.Factor(_, _, Representation.Product.Unit))
+              ) =>
+            ???
         }
     }
 
   implicit def eq[A](implicit eqA: Eq[A]): Eq[Tree[A]] = { (x: Tree[A], y: Tree[A]) =>
     GEq.eq[Tree[A], Tree.GenericRep[A]](x, y)(
       generic,
-      GEq.sum(
-        GEq.product(eqA, GEq.unit),
-        GEq.sum(GEq.product(eq(eqA), GEq.product(eq(eqA), GEq.unit)), GEq.void)
+      GEq.sumCase(
+        GEq.productFactor(eqA, GEq.productUnit),
+        GEq.sumCase(GEq.productFactor(eq(eqA), GEq.productFactor(eq(eqA), GEq.productUnit)), GEq.sumVoid)
       )
     )
   }
@@ -78,7 +90,7 @@ object Tree {
   def conName[A](x: Tree[A]): String =
     GConName.conName[Tree[A], Tree.GenericRep[A]](x)(
       generic,
-      GConName.sum(GConName.sum(GConName.void))
+      GConName.sumCase(GConName.sumCase(GConName.sumVoid))
     )
 }
 
@@ -130,25 +142,30 @@ object Color {
                   .Next(Representation.Sum.Case.Constructor(_, Representation.Product.Unit))
               ) =>
             Blue
+          case Representation.Sum.Void                                                             => ???
+          case Representation.Sum.Case.Next(Representation.Sum.Void)                               => ???
+          case Representation.Sum.Case.Next(Representation.Sum.Case.Next(Representation.Sum.Void)) => ???
+          case Representation.Sum.Case.Next(Representation.Sum.Case.Next(Representation.Sum.Case.Next(_))) =>
+            ???
         }
     }
 
   implicit val eq: Eq[Color] = (x: Color, y: Color) =>
     GEq.eq[Color, Color.GenericRep](x, y)(
       generic,
-      GEq.sum(GEq.unit, GEq.sum(GEq.unit, GEq.sum(GEq.unit, GEq.void)))
+      GEq.sumCase(GEq.productUnit, GEq.sumCase(GEq.productUnit, GEq.sumCase(GEq.productUnit, GEq.sumVoid)))
     )
 
   def enum: List[Color] =
     GEnum.`enum`[Color, Color.GenericRep](
       generic,
-      GEnum.sum(GEnum.sum(GEnum.sum(GEnum.void)))
+      GEnum.sumCase(GEnum.sumCase(GEnum.sumCase(GEnum.sumVoid)))
     )
 
   def conName(x: Color): String =
     GConName.conName[Color, Color.GenericRep](x)(
       generic,
-      GConName.sum(GConName.sum(GConName.sum(GConName.void)))
+      GConName.sumCase(GConName.sumCase(GConName.sumCase(GConName.sumVoid)))
     )
 }
 
