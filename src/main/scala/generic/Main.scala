@@ -22,8 +22,8 @@ object Tree {
   type GenericRep[A] = Representation.Sum[
     Representation.Product[A, Representation.Product.Unit.type],
     Representation.Sum[Representation.Product[Tree[A], Representation.Product[Tree[
-      A
-    ], Representation.Product.Unit.type]], Representation.Sum.Void.type]
+      A,
+    ], Representation.Product.Unit.type]], Representation.Sum.Void.type],
   ]
   implicit def generic[A]: Generic[Tree[A]] { type Rep = GenericRep[A] } =
     new Generic[Tree[A]] {
@@ -34,15 +34,15 @@ object Tree {
           case Leaf(x) =>
             Representation.Sum.Case.Constructor(
               "Leaf",
-              Representation.Product.Factor("x", x, Representation.Product.Unit)
+              Representation.Product.Factor("x", x, Representation.Product.Unit),
             )
           case Branch(l, r) =>
             Representation.Sum.Case.Next(
               Representation.Sum.Case.Constructor(
                 "Branch",
                 Representation.Product
-                  .Factor("l", l, Representation.Product.Factor("r", r, Representation.Product.Unit))
-              )
+                  .Factor("l", l, Representation.Product.Factor("r", r, Representation.Product.Unit)),
+              ),
             )
         }
 
@@ -57,9 +57,9 @@ object Tree {
                   Representation.Product.Factor(
                     _,
                     l,
-                    Representation.Product.Factor(_, r, Representation.Product.Unit)
-                  )
-                )
+                    Representation.Product.Factor(_, r, Representation.Product.Unit),
+                  ),
+                ),
               ) =>
             Branch(l, r)
           case Representation.Sum.Void                                                             => ???
@@ -71,7 +71,7 @@ object Tree {
             ???
           case Representation.Sum.Case.Next(
                 Representation.Sum.Case
-                  .Constructor(_, Representation.Product.Factor(_, _, Representation.Product.Unit))
+                  .Constructor(_, Representation.Product.Factor(_, _, Representation.Product.Unit)),
               ) =>
             ???
         }
@@ -82,15 +82,15 @@ object Tree {
       generic,
       GEq.sumCase(
         GEq.productFactor(eqA, GEq.productUnit),
-        GEq.sumCase(GEq.productFactor(eq(eqA), GEq.productFactor(eq(eqA), GEq.productUnit)), GEq.sumVoid)
-      )
+        GEq.sumCase(GEq.productFactor(eq(eqA), GEq.productFactor(eq(eqA), GEq.productUnit)), GEq.sumVoid),
+      ),
     )
   }
 
   def conName[A](x: Tree[A]): String =
     GConName.conName[Tree[A], Tree.GenericRep[A]](x)(
       generic,
-      GConName.sumCase(GConName.sumCase(GConName.sumVoid))
+      GConName.sumCase(GConName.sumCase(GConName.sumVoid)),
     )
 }
 
@@ -107,7 +107,7 @@ object Color {
   type GenericRep =
     Representation.Sum[Representation.Product.Unit.type, Representation.Sum[
       Representation.Product.Unit.type,
-      Representation.Sum[Representation.Product.Unit.type, Representation.Sum.Void.type]
+      Representation.Sum[Representation.Product.Unit.type, Representation.Sum.Void.type],
     ]]
   implicit val generic: Generic[Color] { type Rep = GenericRep } =
     new Generic[Color] {
@@ -119,13 +119,13 @@ object Color {
             Representation.Sum.Case.Constructor("Red", Representation.Product.Unit)
           case Green =>
             Representation.Sum.Case.Next(
-              Representation.Sum.Case.Constructor("Green", Representation.Product.Unit)
+              Representation.Sum.Case.Constructor("Green", Representation.Product.Unit),
             )
           case Blue =>
             Representation.Sum.Case.Next(
               Representation.Sum.Case.Next(
-                Representation.Sum.Case.Constructor("Blue", Representation.Product.Unit)
-              )
+                Representation.Sum.Case.Constructor("Blue", Representation.Product.Unit),
+              ),
             )
         }
 
@@ -134,12 +134,12 @@ object Color {
           case Representation.Sum.Case.Constructor(_, Representation.Product.Unit) =>
             Red
           case Representation.Sum.Case.Next(
-                Representation.Sum.Case.Constructor(_, Representation.Product.Unit)
+                Representation.Sum.Case.Constructor(_, Representation.Product.Unit),
               ) =>
             Green
           case Representation.Sum.Case.Next(
                 Representation.Sum.Case
-                  .Next(Representation.Sum.Case.Constructor(_, Representation.Product.Unit))
+                  .Next(Representation.Sum.Case.Constructor(_, Representation.Product.Unit)),
               ) =>
             Blue
           case Representation.Sum.Void                                                             => ???
@@ -153,19 +153,19 @@ object Color {
   implicit val eq: Eq[Color] = (x: Color, y: Color) =>
     GEq.eq[Color, Color.GenericRep](x, y)(
       generic,
-      GEq.sumCase(GEq.productUnit, GEq.sumCase(GEq.productUnit, GEq.sumCase(GEq.productUnit, GEq.sumVoid)))
+      GEq.sumCase(GEq.productUnit, GEq.sumCase(GEq.productUnit, GEq.sumCase(GEq.productUnit, GEq.sumVoid))),
     )
 
   def enum: List[Color] =
     GEnum.`enum`[Color, Color.GenericRep](
       generic,
-      GEnum.sumCase(GEnum.sumCase(GEnum.sumCase(GEnum.sumVoid)))
+      GEnum.sumCase(GEnum.sumCase(GEnum.sumCase(GEnum.sumVoid))),
     )
 
   def conName(x: Color): String =
     GConName.conName[Color, Color.GenericRep](x)(
       generic,
-      GConName.sumCase(GConName.sumCase(GConName.sumCase(GConName.sumVoid)))
+      GConName.sumCase(GConName.sumCase(GConName.sumCase(GConName.sumVoid))),
     )
 }
 
