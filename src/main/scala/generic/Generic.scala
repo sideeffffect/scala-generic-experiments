@@ -68,6 +68,15 @@ object GEq {
         case _ => false
       }
 
+  implicit def sumCaseConstructor[P <: Representation.Product[_, _]](implicit
+      geqA: GEq[P],
+  ): GEq[Representation.Sum.Case.Constructor[P]] =
+    (x: Representation.Sum.Case.Constructor[P], y: Representation.Sum.Case.Constructor[P]) =>
+      (x, y) match {
+        case (Representation.Sum.Case.Constructor(_, x), Representation.Sum.Case.Constructor(_, y)) =>
+          geqA.geq(x, y)
+      }
+
   @silent("never used")
   implicit val sumVoid: GEq[Representation.Sum.Void.type] =
     (x: Representation.Sum.Void.type, y: Representation.Sum.Void.type) => true
@@ -108,6 +117,13 @@ object GEnum {
           genumS.genum.map(Representation.Sum.Case.Next(_))
     }
 
+  implicit def sumCaseConstructor[S <: Representation.Sum[Representation.Product.Unit.type, _]]
+      : GEnum[Representation.Sum.Case.Constructor[Representation.Product.Unit.type]] =
+    new GEnum[Representation.Sum.Case.Constructor[Representation.Product.Unit.type]] {
+      override def genum: List[Representation.Sum.Case.Constructor[Representation.Product.Unit.type]] =
+        List(Representation.Sum.Case.Constructor("<undefined>", Representation.Product.Unit))
+    }
+
   implicit val sumVoid: GEnum[Representation.Sum.Void.type] = new GEnum[Representation.Sum.Void.type] {
     override def genum: List[Representation.Sum.Void.type] = List()
   }
@@ -129,6 +145,11 @@ object GConName {
   ): GConName[Representation.Sum.Case[P, S]] = {
     case Representation.Sum.Case.Constructor(constructorName, _) => constructorName
     case Representation.Sum.Case.Next(sum)                       => gconnameS.gconName(sum)
+  }
+
+  implicit def sumCaseConstructor[P <: Representation.Product[_, _]]
+      : GConName[Representation.Sum.Case.Constructor[P]] = {
+    case Representation.Sum.Case.Constructor(constructorName, _) => constructorName
   }
 
   @silent("never used")
