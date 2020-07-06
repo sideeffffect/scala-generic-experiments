@@ -19,9 +19,9 @@ object Tree {
     def apply[A](l: Tree[A], r: Tree[A]): Tree[A] = new Branch(l, r)
   }
 
-  type GenericRep[A] = Representation.Sum[
-    Representation.Product[A, Representation.Product.Unit.type],
-    Representation.Sum[Representation.Product[Tree[A], Representation.Product[Tree[
+  type GenericRep[A] = Representation.Sum.Case[
+    Representation.Product.Factor[A, Representation.Product.Unit.type],
+    Representation.Sum.Case[Representation.Product.Factor[Tree[A], Representation.Product.Factor[Tree[
       A,
     ], Representation.Product.Unit.type]], Representation.Sum.Void.type],
   ]
@@ -62,18 +62,7 @@ object Tree {
                 ),
               ) =>
             Branch(l, r)
-          case Representation.Sum.Void                                                             => ???
-          case Representation.Sum.Case.Next(Representation.Sum.Void)                               => ???
           case Representation.Sum.Case.Next(Representation.Sum.Case.Next(Representation.Sum.Void)) => ???
-          case Representation.Sum.Case.Constructor(_, Representation.Product.Unit)                 => ???
-          case Representation.Sum.Case
-                .Next(Representation.Sum.Case.Constructor(_, Representation.Product.Unit)) =>
-            ???
-          case Representation.Sum.Case.Next(
-                Representation.Sum.Case
-                  .Constructor(_, Representation.Product.Factor(_, _, Representation.Product.Unit)),
-              ) =>
-            ???
         }
     }
 
@@ -105,9 +94,9 @@ object Color {
   final case object Blue extends Color
 
   type GenericRep =
-    Representation.Sum[Representation.Product.Unit.type, Representation.Sum[
+    Representation.Sum.Case[Representation.Product.Unit.type, Representation.Sum.Case[
       Representation.Product.Unit.type,
-      Representation.Sum[Representation.Product.Unit.type, Representation.Sum.Void.type],
+      Representation.Sum.Case[Representation.Product.Unit.type, Representation.Sum.Void.type],
     ]]
   implicit val generic: Generic[Color] { type Rep = GenericRep } =
     new Generic[Color] {
@@ -142,10 +131,8 @@ object Color {
                   .Next(Representation.Sum.Case.Constructor(_, Representation.Product.Unit)),
               ) =>
             Blue
-          case Representation.Sum.Void                                                             => ???
-          case Representation.Sum.Case.Next(Representation.Sum.Void)                               => ???
-          case Representation.Sum.Case.Next(Representation.Sum.Case.Next(Representation.Sum.Void)) => ???
-          case Representation.Sum.Case.Next(Representation.Sum.Case.Next(Representation.Sum.Case.Next(_))) =>
+          case Representation.Sum.Case
+                .Next(Representation.Sum.Case.Next(Representation.Sum.Case.Next(Representation.Sum.Void))) =>
             ???
         }
     }
