@@ -62,7 +62,7 @@ object Tree {
                 ),
               ) =>
             Branch(l, r)
-          case Representation.Sum.Case.Next(Representation.Sum.Case.Next(Representation.Sum.Void)) => ???
+          case Representation.Sum.Case.Next(Representation.Sum.Case.Next(void)) => absurd(void)
         }
     }
 
@@ -132,8 +132,8 @@ object Color {
               ) =>
             Blue
           case Representation.Sum.Case
-                .Next(Representation.Sum.Case.Next(Representation.Sum.Case.Next(Representation.Sum.Void))) =>
-            ???
+                .Next(Representation.Sum.Case.Next(Representation.Sum.Case.Next(void))) =>
+            absurd(void)
         }
     }
 

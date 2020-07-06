@@ -9,6 +9,8 @@ trait Generic[A] {
   def from(a: A): Rep
 
   def to(rep: Rep): A
+
+  def absurd(void: Representation.Sum.Void.type): A = sys.error(s"$void")
 }
 
 sealed trait Representation extends Product with Serializable
