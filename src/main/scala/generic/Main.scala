@@ -26,7 +26,7 @@ object Tree {
     ], Representation.Product.Unit.type]], Representation.Sum.Void.type],
   ]
   implicit def generic[A]: Generic[Tree[A]] { type Rep = GenericRep[A] } =
-    new Generic[Tree[A]] {
+    new Generic[Tree[A]] with GenericHelper[Tree[A]] {
       override type Rep = GenericRep[A]
 
       override def from(a: Tree[A]): Rep =
@@ -99,7 +99,7 @@ object Color {
       Representation.Sum.Case[Representation.Product.Unit.type, Representation.Sum.Void.type],
     ]]
   implicit val generic: Generic[Color] { type Rep = GenericRep } =
-    new Generic[Color] {
+    new Generic[Color] with GenericHelper[Color] {
       override type Rep = GenericRep
 
       override def from(a: Color): Rep =

@@ -9,7 +9,9 @@ trait Generic[A] {
   def from(a: A): Rep
 
   def to(rep: Rep): A
+}
 
+trait GenericHelper[A] { self: Generic[A] =>
   def absurd(void: Representation.Sum.Void.type): A = sys.error(s"$void")
 }
 
